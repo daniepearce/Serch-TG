@@ -1,0 +1,32 @@
+import telegram
+from telegram.ext import CommandHandler, MessageHandler, Filters, Updater
+import requests
+
+# Command handler function for Google search
+def search(update, context):
+    query = update.message.text.split(' ', 1)[1] # Get the search keyword
+    try:
+        # Use the Google Custom Search JSON API to search by keyword
+        url = f"https://www.googleapis.com/customsearch/v1?q={query}&key=YOUR_API_KEY&cx=YOUR_CX"
+        response = requests.get(url).json()
+        result = response['items'][0]['link'] # Get the first search result
+        update.message.reply_text(result) # Send the result to the user
+    except:
+        update.message.reply_text('Error retrieving search results.')
+
+# Handler function for unknown commands
+def unknown(update, context):
+    update.message.reply_text("Hmm, I don't understand that command.")
+
+# Get the bot token and create a Telegram Bot API client instance
+TOKEN = 'YOUR_BOT_TOKEN'
+bot = telegram.Bot(token=TOKEN)
+
+# Create an Updater instance and add command handlers
+updater = Updater(token=TOKEN, use_context=True)
+dispatcher = updater.dispatcher
+dispatcher.add_handler(CommandHandler('search', search))
+dispatcher.add_handler(MessageHandler(Filters.command, unknown))
+
+# Start the bot
+updater.start_polling()
